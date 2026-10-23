@@ -19,8 +19,7 @@
         <div class="track track-rejects">
             @foreach (var interval in Scenario.Intervals.Where(i => i.RejectedCount > 0))
             {
-                var changed = interval.RejectedCount != Baseline.Intervals[interval.Index].RejectedCount;
-                <span class="reject-mark @(changed ? "is-changed" : "")"
+                <span class="reject-mark"
                       style="left: @ChartMath.Percent(interval.Start.TotalMinutes, Width); width: @ChartMath.Percent(interval.Duration.TotalMinutes, Width); height: @ChartMath.Percent(interval.RejectedCount, RejectScale)"
                       title="@($"{Clock(interval.Start)}–{Clock(interval.End)}: {interval.RejectedCount} Ausschuss")"></span>
             }

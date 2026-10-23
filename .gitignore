@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Browser smoke test output (README: tests/browser/smoke.mjs --screenshots screenshots)
+/screenshots/
