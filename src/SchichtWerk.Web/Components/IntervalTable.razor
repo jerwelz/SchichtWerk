@@ -1,0 +1,34 @@
+@* All intervals as a table: the text equivalent of the chart and timeline. *@
+
+<details class="card details">
+    <summary><h2>Alle @Scenario.Intervals.Count Intervalle als Tabelle</h2></summary>
+    <div class="table-scroll">
+        <table class="table intervals">
+            <caption class="visually-hidden">5-Minuten-Intervalle der Schicht</caption>
+            <thead>
+                <tr><th scope="col">Zeit</th><th scope="col">Zustand</th><th scope="col">Gut</th><th scope="col">Ausschuss</th><th scope="col">Gut kumuliert</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var interval in Scenario.Intervals)
+                {
+                    var changed = interval != Baseline.Intervals[interval.Index];
+                    <tr class="@(changed ? "is-changed" : "")">
+                        <th scope="row">@Clock(interval.Start)–@Clock(interval.End)</th>
+                        <td>@Labels.For(interval)@(changed ? " (geändert)" : "")</td>
+                        <td>@interval.GoodCount</td>
+                        <td>@interval.RejectedCount</td>
+                        <td>@GermanFormat.Number(Result.Cumulative[interval.Index + 1].GoodCount)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public required ShiftScenario Scenario { get; set; }
+    [Parameter, EditorRequired] public required ShiftScenario Baseline { get; set; }
+    [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+
+    private string Clock(TimeSpan offset) => GermanFormat.Clock(Scenario.Info.StartTime, offset);
+}

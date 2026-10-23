@@ -1,26 +1,97 @@
 ﻿@page "/"
-@using SchichtWerk.Domain
-@using SchichtWerk.Web.Formatting
 
 <PageTitle>SchichtWerk — Produktionsverluste verstehen</PageTitle>
 
-@* Temporary page: shows the calculated baseline until the dashboard is built in Milestone 4. *@
-<main class="placeholder">
-    <h1>SchichtWerk</h1>
-    <p>Wie Stillstand und Ausschuss die Produktion verändern. <strong>Fiktive Schichtsimulation</strong> — im Aufbau.</p>
+<header class="site-header">
+    <div class="page header-inner">
+        <div>
+            <p class="eyebrow">Fiktive Schichtsimulation</p>
+            <h1>SchichtWerk</h1>
+            <p class="subtitle">Wie Stillstand und Ausschuss die Produktion verändern</p>
+        </div>
+        <a class="github-link" href="@RepositoryUrl" target="_blank" rel="noopener">Quellcode auf GitHub</a>
+    </div>
+</header>
 
-    <dl>
-        <dt>OEE (Gesamtanlageneffektivität)</dt>
-        <dd>@GermanFormat.Percent(result.Oee ?? 0)</dd>
-        <dt>Gutteile</dt>
-        <dd>@GermanFormat.Number(result.GoodCount) Stück</dd>
-        <dt>Stillstand</dt>
-        <dd>@GermanFormat.Minutes(result.DowntimeTime)</dd>
-        <dt>Ausschussquote</dt>
-        <dd>@GermanFormat.Percent(result.RejectShare ?? 0)</dd>
-    </dl>
+<main class="page">
+    <p class="intro">
+        Eine Maschine, eine Schicht, erfundene Daten. Probieren Sie zwei typische Verluste aus und sehen Sie,
+        wie sich die <strong>OEE</strong> verändert – also der Anteil der geplanten Produktionszeit,
+        der tatsächlich zu verwendbaren Teilen wurde.
+    </p>
+
+    <p class="context">
+        <span>@Info.Machine</span>
+        <span>@Info.Product</span>
+        <span>@Info.ShiftName @GermanFormat.Clock(Info.StartTime, TimeSpan.Zero)–@GermanFormat.Clock(Info.StartTime, Current.ShiftLength)</span>
+        <span>ideale Taktzeit @GermanFormat.Number(Current.IdealCycleTime.TotalSeconds) s</span>
+    </p>
+
+    <div class="dashboard">
+        <div class="area-kpis">
+            <KpiCards Result="simulation.CurrentResult" Change="simulation.ChangeFromBaseline" ShowChange="simulation.HasChanges" />
+        </div>
+
+        @* Two independent columns on wide screens (controls on the right). The controls come
+           first in the markup so keyboard order matches the small-screen order, where the
+           column wrappers dissolve and the areas are ordered: controls → chart → details. *@
+        <div class="column column-side">
+            <div class="area-controls">
+                <ScenarioControls Simulation="simulation"
+                                  OnMaterialShortage="simulation.ApplyMaterialShortage"
+                                  OnAdditionalRejects="simulation.ApplyAdditionalRejects"
+                                  OnReset="simulation.Reset" />
+            </div>
+
+            <section class="card area-comparison" aria-labelledby="comparison-title">
+                <h2 id="comparison-title">Ausgangslage und Szenario</h2>
+                <ComparisonTable Baseline="simulation.BaselineResult" Current="simulation.CurrentResult" Change="simulation.ChangeFromBaseline" />
+            </section>
+        </div>
+
+        <div class="column column-main">
+            <section class="card area-chart" aria-labelledby="chart-title">
+                <h2 id="chart-title">Produktion im Schichtverlauf</h2>
+                <p class="muted">Kumulierte Gutteile im Vergleich zur theoretischen Kapazität bei idealer Taktzeit.</p>
+                <CumulativeChart Scenario="Current" Result="simulation.CurrentResult"
+                                 BaselineResult="simulation.BaselineResult" ShowBaseline="simulation.HasChanges" />
+
+                <h3 class="timeline-title">Zeitachse</h3>
+                <ShiftTimeline Scenario="Current" Baseline="simulation.Baseline" />
+            </section>
+
+            <section class="card area-reasons" aria-labelledby="reasons-title">
+                <h2 id="reasons-title">Stillstand nach Ursache</h2>
+                <DowntimeReasons Result="simulation.CurrentResult" BaselineResult="simulation.BaselineResult" />
+            </section>
+
+            <div class="area-explain">
+                <CalculationExplanation Result="simulation.CurrentResult" IdealCycleTime="Current.IdealCycleTime" />
+            </div>
+        </div>
+
+        <div class="area-table">
+            <IntervalTable Scenario="Current" Baseline="simulation.Baseline" Result="simulation.CurrentResult" />
+        </div>
+    </div>
 </main>
 
+<footer class="site-footer">
+    <div class="page">
+        <p>
+            Lernprojekt mit erfundenen Daten – keine Anbindung an echte Maschinen oder Systeme.
+            Die Simulation läuft vollständig in Ihrem Browser; Neuladen stellt die Ausgangslage wieder her.
+        </p>
+        <p>C# · .NET 10 · Blazor WebAssembly · <a href="@RepositoryUrl" target="_blank" rel="noopener">github.com/jerwelz/SchichtWerk</a></p>
+    </div>
+</footer>
+
 @code {
-    private readonly OeeResult result = OeeCalculator.Calculate(DemoScenarioFactory.CreateBaseline());
+    private const string RepositoryUrl = "https://github.com/jerwelz/SchichtWerk";
+
+    // One simulation per browser tab; every number on the page is derived from it.
+    private readonly ShiftSimulation simulation = new();
+
+    private ShiftScenario Current => simulation.Current;
+    private ShiftInfo Info => simulation.Current.Info;
 }

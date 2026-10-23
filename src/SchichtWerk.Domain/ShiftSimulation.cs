@@ -30,6 +30,11 @@ public sealed class ShiftSimulation
 
     public bool AdditionalRejectsApplied { get; private set; }
 
+    public bool HasChanges => MaterialShortageApplied || AdditionalRejectsApplied;
+
+    /// <summary>How the current scenario differs from the baseline.</summary>
+    public ResultComparison ChangeFromBaseline => ResultComparison.Between(BaselineResult, CurrentResult);
+
     /// <summary>The machine stops for 10 more minutes (11:30–11:40) because material is missing.</summary>
     public void ApplyMaterialShortage()
     {

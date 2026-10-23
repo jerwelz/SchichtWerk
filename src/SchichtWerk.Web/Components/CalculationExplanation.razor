@@ -1,0 +1,46 @@
+@* How OEE is calculated, filled in with the current numbers. *@
+
+<details class="card details" open="@Open">
+    <summary><h2>So wird gerechnet</h2></summary>
+
+    <p>
+        <strong>OEE</strong> (Overall Equipment Effectiveness, Gesamtanlageneffektivität) zeigt,
+        welcher Anteil der geplanten Produktionszeit tatsächlich zu verwendbaren Teilen wurde.
+        Sie setzt sich aus drei Verlustarten zusammen:
+    </p>
+
+    <dl class="formulas">
+        <dt>Geplante Produktionszeit</dt>
+        <dd>Schichtdauer − Pause = @GermanFormat.Minutes(Result.ShiftTime) − @GermanFormat.Minutes(Result.ScheduledBreakTime) = <strong>@GermanFormat.Minutes(Result.PlannedProductionTime)</strong></dd>
+
+        <dt>Verfügbarkeit <span class="muted">– Verlust durch Stillstand</span></dt>
+        <dd>Laufzeit ÷ geplante Zeit = @GermanFormat.Minutes(Result.RunningTime) ÷ @GermanFormat.Minutes(Result.PlannedProductionTime) = <strong>@GermanFormat.Percent(Result.Availability)</strong></dd>
+
+        <dt>Leistung <span class="muted">– Verlust durch langsameres Arbeiten</span></dt>
+        <dd>ideale Taktzeit × Stückzahl ÷ Laufzeit = @GermanFormat.Number(CycleMinutes, 1) Min. × @GermanFormat.Number(Result.TotalCount) ÷ @GermanFormat.Minutes(Result.RunningTime) = <strong>@GermanFormat.Percent(Result.Performance)</strong></dd>
+
+        <dt>Qualität <span class="muted">– Verlust durch Ausschuss</span></dt>
+        <dd>Gutteile ÷ Stückzahl = @GermanFormat.Number(Result.GoodCount) ÷ @GermanFormat.Number(Result.TotalCount) = <strong>@GermanFormat.Percent(Result.Quality)</strong></dd>
+
+        <dt>OEE</dt>
+        <dd>Verfügbarkeit × Leistung × Qualität = <strong>@GermanFormat.Percent(Result.Oee, 2)</strong></dd>
+
+        <dt>Gegenprobe</dt>
+        <dd>Gutteile × ideale Taktzeit ÷ geplante Zeit = @GermanFormat.Number(Result.GoodCount) × @GermanFormat.Number(CycleMinutes, 1) Min. ÷ @GermanFormat.Minutes(Result.PlannedProductionTime) = <strong>@GermanFormat.Percent(Result.Oee, 2)</strong></dd>
+    </dl>
+
+    <ul class="notes">
+        <li>Die Pause gehört nicht zur geplanten Produktionszeit. Umrüsten, Störungen und Materialmangel dagegen schon – sie zählen als Stillstand.</li>
+        <li>Die theoretische Kapazität (@GermanFormat.Pieces((int)Result.TheoreticalCapacity)) ist das Maximum bei idealer Taktzeit ohne Stillstand, kein Produktionsziel.</li>
+        <li>Prozentwerte werden nur für die Anzeige gerundet; gerechnet wird mit exakten Zeiten und Stückzahlen.</li>
+        <li>Alle Werte sind erfunden und dienen nur der Veranschaulichung.</li>
+    </ul>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+    [Parameter, EditorRequired] public required TimeSpan IdealCycleTime { get; set; }
+    [Parameter] public bool Open { get; set; }
+
+    private double CycleMinutes => IdealCycleTime.TotalMinutes;
+}

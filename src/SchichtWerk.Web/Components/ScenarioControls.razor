@@ -1,0 +1,68 @@
+@* The two scenario actions and reset. Each action can be applied once until reset. *@
+
+<section class="card controls" aria-labelledby="controls-title">
+    <h2 id="controls-title">Szenario ausprobieren</h2>
+    <p class="muted">Verändern Sie die Schicht und beobachten Sie Kennzahlen, Diagramm und Zeitachse.</p>
+
+    <div class="action">
+        <button type="button" class="btn btn-action" disabled="@Simulation.MaterialShortageApplied" @onclick="OnMaterialShortage">
+            @(Simulation.MaterialShortageApplied ? "✓ " : "")10 Min. Materialmangel
+        </button>
+        <p class="action-text">
+            @MaterialWindow: Die Maschine steht still, weil Material fehlt. Laufzeit wird zu Stillstand.
+        </p>
+    </div>
+
+    <div class="action">
+        <button type="button" class="btn btn-action" disabled="@Simulation.AdditionalRejectsApplied" @onclick="OnAdditionalRejects">
+            @(Simulation.AdditionalRejectsApplied ? "✓ " : "")10 Gutteile als Ausschuss
+        </button>
+        <p class="action-text">
+            @RejectWindow: 10 bereits gefertigte Teile erweisen sich als fehlerhaft. Laufzeit und Stückzahl bleiben gleich.
+        </p>
+    </div>
+
+    <button type="button" class="btn btn-reset" disabled="@(!Simulation.HasChanges)" @onclick="OnReset">Zurücksetzen</button>
+
+    <div class="summary" role="status" aria-live="polite">
+        @if (Simulation.HasChanges)
+        {
+            var change = Simulation.ChangeFromBaseline;
+            var result = Simulation.CurrentResult;
+            <p>
+                <strong>OEE @GermanFormat.Percent(result.Oee)</strong> (@GermanFormat.PercentagePoints(change.OeeChange)),
+                @GermanFormat.Number(Math.Abs(change.GoodCountChange)) Gutteile weniger als in der Ausgangslage.
+            </p>
+            @if (Simulation.MaterialShortageApplied)
+            {
+                <p>Stillstand senkt die <strong>Verfügbarkeit</strong>: In den 10 Minuten entstehen keine Teile.</p>
+            }
+            @if (Simulation.AdditionalRejectsApplied)
+            {
+                <p>Ausschuss senkt nur die <strong>Qualität</strong>: Es wurde gleich viel produziert, aber weniger davon ist verwendbar.</p>
+            }
+        }
+        else
+        {
+            <p class="muted">Ausgangslage: noch keine Änderung angewendet.</p>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public required ShiftSimulation Simulation { get; set; }
+    [Parameter] public EventCallback OnMaterialShortage { get; set; }
+    [Parameter] public EventCallback OnAdditionalRejects { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+
+    private string MaterialWindow => Window(DemoScenarioFactory.MaterialShortageActionIntervals);
+    private string RejectWindow => Window(DemoScenarioFactory.RejectActionIntervals);
+
+    /// <summary>Clock range of the target intervals, e.g. "11:30–11:40".</summary>
+    private string Window(IReadOnlyList<int> indices)
+    {
+        var intervals = Simulation.Baseline.Intervals;
+        var start = Simulation.Baseline.Info.StartTime;
+        return $"{GermanFormat.Clock(start, intervals[indices.Min()].Start)}–{GermanFormat.Clock(start, intervals[indices.Max()].End)}";
+    }
+}

@@ -1,0 +1,36 @@
+@* Baseline versus current scenario, every value from the domain results. *@
+
+<table class="table comparison">
+    <caption class="visually-hidden">Ausgangslage und aktuelles Szenario im Vergleich</caption>
+    <thead>
+        <tr><th scope="col">Kennzahl</th><th scope="col">Ausgangs&shy;lage</th><th scope="col">Szenario</th><th scope="col">Änderung</th></tr>
+    </thead>
+    <tbody>
+        @Row("OEE", GermanFormat.Percent(Baseline.Oee), GermanFormat.Percent(Current.Oee), GermanFormat.PercentagePoints(Change.OeeChange))
+        @Row("Verfügbarkeit", GermanFormat.Percent(Baseline.Availability), GermanFormat.Percent(Current.Availability), GermanFormat.PercentagePoints(Change.AvailabilityChange))
+        @Row("Leistung", GermanFormat.Percent(Baseline.Performance), GermanFormat.Percent(Current.Performance), GermanFormat.PercentagePoints(Change.PerformanceChange))
+        @Row("Qualität", GermanFormat.Percent(Baseline.Quality), GermanFormat.Percent(Current.Quality), GermanFormat.PercentagePoints(Change.QualityChange))
+        @Row("Produziert", GermanFormat.Number(Baseline.TotalCount), GermanFormat.Number(Current.TotalCount), GermanFormat.Signed(Change.TotalCountChange))
+        @Row("Gutteile", GermanFormat.Number(Baseline.GoodCount), GermanFormat.Number(Current.GoodCount), GermanFormat.Signed(Change.GoodCountChange))
+        @Row("Ausschuss", GermanFormat.Number(Baseline.RejectedCount), GermanFormat.Number(Current.RejectedCount), GermanFormat.Signed(Change.RejectedCountChange))
+        @Row("Laufzeit", GermanFormat.Minutes(Baseline.RunningTime), GermanFormat.Minutes(Current.RunningTime), GermanFormat.SignedMinutes(Change.RunningTimeChange))
+        @Row("Stillstand", GermanFormat.Minutes(Baseline.DowntimeTime), GermanFormat.Minutes(Current.DowntimeTime), GermanFormat.SignedMinutes(Change.DowntimeChange))
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired] public required OeeResult Baseline { get; set; }
+    [Parameter, EditorRequired] public required OeeResult Current { get; set; }
+    [Parameter, EditorRequired] public required ResultComparison Change { get; set; }
+
+    private static RenderFragment Row(string label, string baseline, string current, string change) => __builder =>
+    {
+        var unchanged = change.StartsWith('±');
+        <tr class="@(unchanged ? "" : "is-changed")">
+            <th scope="row">@label</th>
+            <td>@baseline</td>
+            <td>@current</td>
+            <td class="@(unchanged ? "muted" : "strong")">@change</td>
+        </tr>
+    };
+}

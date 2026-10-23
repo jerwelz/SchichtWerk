@@ -1,0 +1,41 @@
+@* The four headline numbers. A change line appears once a scenario differs from the baseline. *@
+
+<section class="kpis" aria-label="Kennzahlen der Schicht">
+    <article class="card kpi kpi-hero">
+        <h2 class="kpi-label">OEE <span class="kpi-hint">Gesamtanlageneffektivität</span></h2>
+        <p class="kpi-value">@GermanFormat.Percent(Result.Oee)</p>
+        <ChangeLine Show="ShowChange" Value="Change.OeeChange * 100" Text="@GermanFormat.PercentagePoints(Change.OeeChange)" HigherIsBetter="true" />
+        <dl class="kpi-factors">
+            <div><dt>Verfügbarkeit</dt><dd>@GermanFormat.Percent(Result.Availability)</dd></div>
+            <div><dt>Leistung</dt><dd>@GermanFormat.Percent(Result.Performance)</dd></div>
+            <div><dt>Qualität</dt><dd>@GermanFormat.Percent(Result.Quality)</dd></div>
+        </dl>
+    </article>
+
+    <article class="card kpi">
+        <h2 class="kpi-label">Gutteile</h2>
+        <p class="kpi-value">@GermanFormat.Number(Result.GoodCount) <span class="kpi-unit">Stück</span></p>
+        <ChangeLine Show="ShowChange" Value="Change.GoodCountChange" Text="@($"{GermanFormat.Signed(Change.GoodCountChange)} Stück")" HigherIsBetter="true" />
+        <p class="kpi-sub">von @GermanFormat.Pieces(Result.TotalCount) produziert</p>
+    </article>
+
+    <article class="card kpi">
+        <h2 class="kpi-label">Stillstand</h2>
+        <p class="kpi-value">@GermanFormat.Number(Result.DowntimeTime.TotalMinutes) <span class="kpi-unit">Min.</span></p>
+        <ChangeLine Show="ShowChange" Value="Change.DowntimeChange.TotalMinutes" Text="@GermanFormat.SignedMinutes(Change.DowntimeChange)" HigherIsBetter="false" />
+        <p class="kpi-sub">von @GermanFormat.Minutes(Result.PlannedProductionTime) geplanter Zeit</p>
+    </article>
+
+    <article class="card kpi">
+        <h2 class="kpi-label">Ausschussquote</h2>
+        <p class="kpi-value">@GermanFormat.Percent(Result.RejectShare)</p>
+        <ChangeLine Show="ShowChange" Value="Change.RejectShareChange * 100" Text="@GermanFormat.PercentagePoints(Change.RejectShareChange)" HigherIsBetter="false" />
+        <p class="kpi-sub">@GermanFormat.Number(Result.RejectedCount) von @GermanFormat.Pieces(Result.TotalCount)</p>
+    </article>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+    [Parameter, EditorRequired] public required ResultComparison Change { get; set; }
+    [Parameter] public bool ShowChange { get; set; }
+}

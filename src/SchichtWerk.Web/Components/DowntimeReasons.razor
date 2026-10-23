@@ -1,0 +1,30 @@
+@* Downtime per reason as horizontal bars, longest first, with the change versus the baseline. *@
+
+<ul class="reasons">
+    @foreach (var item in Result.DowntimeByReason.OrderByDescending(d => d.Duration))
+    {
+        var baseline = BaselineResult.DowntimeByReason.Single(d => d.Reason == item.Reason).Duration;
+        var change = item.Duration - baseline;
+        <li class="reason">
+            <span class="reason-label">@Labels.For(item.Reason)</span>
+            <span class="reason-track">
+                <span class="reason-bar" style="width: @ChartMath.Percent(item.Duration.TotalMinutes, MaxMinutes)"></span>
+            </span>
+            <span class="reason-value">
+                @GermanFormat.Minutes(item.Duration)
+                @if (change != TimeSpan.Zero)
+                {
+                    <span class="reason-change">@($" ({GermanFormat.SignedMinutes(change)})")</span>
+                }
+            </span>
+        </li>
+    }
+</ul>
+<p class="muted small">Gesamt: @GermanFormat.Minutes(Result.DowntimeTime) Stillstand in @GermanFormat.Minutes(Result.PlannedProductionTime) geplanter Produktionszeit.</p>
+
+@code {
+    [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+    [Parameter, EditorRequired] public required OeeResult BaselineResult { get; set; }
+
+    private double MaxMinutes => Math.Max(1, Result.DowntimeByReason.Max(d => d.Duration.TotalMinutes));
+}

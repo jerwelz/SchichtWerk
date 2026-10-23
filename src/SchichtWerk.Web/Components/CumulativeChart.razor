@@ -1,0 +1,146 @@
+@* Cumulative good parts over the shift against theoretical capacity.
+   The SVG uses data units (x = minutes, y = pieces) and stretches to its box;
+   axis labels, end dot and tooltip are HTML so text keeps its real size on small screens. *@
+
+<div class="chart">
+    <ul class="legend">
+        <li><span class="key key-current"></span>Gutteile kumuliert<strong>@GermanFormat.Number(Result.GoodCount)</strong></li>
+        @if (ShowBaseline)
+        {
+            <li><span class="key key-baseline"></span>Ausgangslage<strong>@GermanFormat.Number(BaselineResult.GoodCount)</strong></li>
+        }
+        <li><span class="key key-capacity"></span>Theoretische Kapazität<strong>@GermanFormat.Number(Result.TheoreticalCapacity)</strong></li>
+    </ul>
+
+    <div class="plot" tabindex="0" role="group"
+         aria-label="Diagramm: kumulierte Gutteile über die Schicht. Mit den Pfeiltasten links und rechts durch die 5-Minuten-Intervalle wechseln."
+         @onkeydown="OnKeyDown" @onfocus="OnFocus" @onblur="ClearSelection" @onpointerleave="ClearSelection">
+        <div class="plot-area">
+            <svg class="plot-svg" viewBox="0 0 @ChartMath.Css(Width) @YMax" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                @foreach (var tick in YTicks)
+                {
+                    <line class="grid" x1="0" x2="@ChartMath.Css(Width)" y1="@(YMax - tick)" y2="@(YMax - tick)" vector-effect="non-scaling-stroke" />
+                }
+                <polyline class="line line-capacity" points="@Points(Result, p => p.TheoreticalCount)" vector-effect="non-scaling-stroke" />
+                @if (ShowBaseline)
+                {
+                    <polyline class="line line-baseline" points="@Points(BaselineResult, p => p.GoodCount)" vector-effect="non-scaling-stroke" />
+                }
+                <polyline class="line line-current" points="@Points(Result, p => p.GoodCount)" vector-effect="non-scaling-stroke" />
+
+                @if (Selected is { } s)
+                {
+                    var x = ChartMath.Css(Scenario.Intervals[s].End.TotalMinutes);
+                    <line class="crosshair" x1="@x" x2="@x" y1="0" y2="@YMax" vector-effect="non-scaling-stroke" />
+                }
+
+                @foreach (var interval in Scenario.Intervals)
+                {
+                    var index = interval.Index;
+                    <rect class="hit" x="@ChartMath.Css(interval.Start.TotalMinutes)" y="0"
+                          width="@ChartMath.Css(interval.Duration.TotalMinutes)" height="@YMax"
+                          @onpointerenter="() => Select(index)" />
+                }
+            </svg>
+
+            @foreach (var tick in YTicks)
+            {
+                <span class="axis-y" style="top: @ChartMath.Percent(YMax - tick, YMax)">@GermanFormat.Number(tick)</span>
+            }
+            @foreach (var tick in ChartMath.TimeTicks(Scenario.ShiftLength))
+            {
+                <span class="axis-x" style="left: @ChartMath.Percent(tick.TotalMinutes, Width)">@GermanFormat.Clock(Scenario.Info.StartTime, tick)</span>
+            }
+
+            <span class="dot dot-end" style="@DotStyle(Result.Cumulative[^1])"></span>
+
+            @if (Selected is { } sel)
+            {
+                var point = Result.Cumulative[sel + 1];
+                <span class="dot" style="@DotStyle(point)"></span>
+                <div class="tooltip" style="@TooltipPosition(point)">
+                    @TooltipContent(sel)
+                </div>
+            }
+        </div>
+    </div>
+
+    <p class="chart-hint muted">Zeigen oder tippen Sie auf das Diagramm, oder nutzen Sie nach dem Anwählen die Pfeiltasten.</p>
+    <p class="visually-hidden" aria-live="polite">@(Selected is { } r ? ReadoutText(r) : "")</p>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required ShiftScenario Scenario { get; set; }
+    [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+    [Parameter, EditorRequired] public required OeeResult BaselineResult { get; set; }
+    [Parameter] public bool ShowBaseline { get; set; }
+
+    private const int YStep = 300;
+    private int? Selected;
+
+    private double Width => Scenario.ShiftLength.TotalMinutes;
+    private int YMax => ChartMath.AxisMax(Result.TheoreticalCapacity, YStep);
+    private IEnumerable<int> YTicks => Enumerable.Range(0, YMax / YStep + 1).Select(i => i * YStep);
+
+    private string Points(OeeResult result, Func<CumulativePoint, double> value) =>
+        string.Join(" ", result.Cumulative.Select(p => $"{ChartMath.Css(p.Time.TotalMinutes)},{ChartMath.Css(YMax - value(p))}"));
+
+    private string DotStyle(CumulativePoint point) =>
+        $"left: {ChartMath.Percent(point.Time.TotalMinutes, Width)}; top: {ChartMath.Percent(YMax - point.GoodCount, YMax)}";
+
+    /// <summary>Tooltip beside the crosshair, on the side with more room, so it does not cover the line ends.</summary>
+    private string TooltipPosition(CumulativePoint point)
+    {
+        var x = ChartMath.Percent(point.Time.TotalMinutes, Width);
+        var left = point.Time.TotalMinutes < Width / 2 ? $"calc({x} + 0.75rem)" : $"calc({x} - 13.75rem)";
+        return $"left: clamp(0%, {left}, calc(100% - 13rem))";
+    }
+
+    private void Select(int index) => Selected = index;
+
+    private void ClearSelection() => Selected = null;
+
+    private void OnFocus() => Selected ??= Scenario.Intervals.Count - 1;
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        var last = Scenario.Intervals.Count - 1;
+        Selected = e.Key switch
+        {
+            "ArrowLeft" => Math.Max(0, (Selected ?? last) - 1),
+            "ArrowRight" => Math.Min(last, (Selected ?? -1) + 1),
+            "Escape" => null,
+            _ => Selected,
+        };
+    }
+
+    private string Window(ProductionInterval interval) =>
+        $"{GermanFormat.Clock(Scenario.Info.StartTime, interval.Start)}–{GermanFormat.Clock(Scenario.Info.StartTime, interval.End)}";
+
+    private RenderFragment TooltipContent(int index) => __builder =>
+    {
+        var interval = Scenario.Intervals[index];
+        var point = Result.Cumulative[index + 1];
+        <p class="tooltip-title">@Window(interval) · @Labels.For(interval)</p>
+        <dl>
+            <div><dt><span class="key key-current"></span>Gutteile kumuliert</dt><dd>@GermanFormat.Number(point.GoodCount)</dd></div>
+            @if (ShowBaseline)
+            {
+                <div><dt><span class="key key-baseline"></span>Ausgangslage</dt><dd>@GermanFormat.Number(BaselineResult.Cumulative[index + 1].GoodCount)</dd></div>
+            }
+            <div><dt><span class="key key-capacity"></span>Kapazität</dt><dd>@GermanFormat.Number(point.TheoreticalCount)</dd></div>
+            @if (interval.State == IntervalState.Running)
+            {
+                <div><dt>Im Intervall</dt><dd>@interval.GoodCount gut · @interval.RejectedCount Ausschuss</dd></div>
+            }
+        </dl>
+    };
+
+    private string ReadoutText(int index)
+    {
+        var interval = Scenario.Intervals[index];
+        var point = Result.Cumulative[index + 1];
+        return $"{Window(interval)}, {Labels.For(interval)}. Gutteile kumuliert {GermanFormat.Number(point.GoodCount)}, " +
+               $"Kapazität {GermanFormat.Number(point.TheoreticalCount)}.";
+    }
+}

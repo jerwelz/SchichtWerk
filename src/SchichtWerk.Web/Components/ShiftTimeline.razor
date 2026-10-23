@@ -1,0 +1,69 @@
+@* Timeline of the shift: what the machine was doing, and where rejects occurred.
+   Uses the same horizontal padding as the cumulative chart so both share one time axis. *@
+
+<div class="timeline">
+    <div class="timeline-row">
+        <span class="timeline-label">Zustand</span>
+        <div class="track">
+            @foreach (var segment in Segments)
+            {
+                <span class="segment segment-@segment.State.ToString().ToLowerInvariant() @(segment.ChangedByScenario ? "is-changed" : "")"
+                      style="left: @ChartMath.Percent(segment.Start.TotalMinutes, Width); width: @ChartMath.Percent(segment.Duration.TotalMinutes, Width)"
+                      title="@SegmentText(segment)"></span>
+            }
+        </div>
+    </div>
+
+    <div class="timeline-row">
+        <span class="timeline-label">Ausschuss</span>
+        <div class="track track-rejects">
+            @foreach (var interval in Scenario.Intervals.Where(i => i.RejectedCount > 0))
+            {
+                var changed = interval.RejectedCount != Baseline.Intervals[interval.Index].RejectedCount;
+                <span class="reject-mark @(changed ? "is-changed" : "")"
+                      style="left: @ChartMath.Percent(interval.Start.TotalMinutes, Width); width: @ChartMath.Percent(interval.Duration.TotalMinutes, Width); height: @ChartMath.Percent(interval.RejectedCount, MaxPiecesPerInterval)"
+                      title="@($"{Clock(interval.Start)}–{Clock(interval.End)}: {interval.RejectedCount} Ausschuss")"></span>
+            }
+        </div>
+    </div>
+
+    <div class="timeline-axis">
+        @foreach (var tick in ChartMath.TimeTicks(Scenario.ShiftLength))
+        {
+            <span class="axis-x" style="left: @ChartMath.Percent(tick.TotalMinutes, Width)">@Clock(tick)</span>
+        }
+    </div>
+
+    <ul class="legend legend-small">
+        <li><span class="swatch swatch-running"></span>Produktion</li>
+        <li><span class="swatch swatch-downtime"></span>Stillstand</li>
+        <li><span class="swatch swatch-break"></span>Pause (nicht geplant)</li>
+        <li><span class="swatch swatch-reject"></span>Ausschuss je Intervall</li>
+        @if (Segments.Any(s => s.ChangedByScenario))
+        {
+            <li><span class="swatch swatch-changed"></span>durch Szenario zu Stillstand</li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required ShiftScenario Scenario { get; set; }
+    [Parameter, EditorRequired] public required ShiftScenario Baseline { get; set; }
+
+    private IReadOnlyList<TimelineSegment> Segments = [];
+
+    private double Width => Scenario.ShiftLength.TotalMinutes;
+
+    /// <summary>Maximum pieces per interval at ideal speed; scales the reject marks.</summary>
+    private double MaxPiecesPerInterval => Scenario.Intervals[0].Duration / Scenario.IdealCycleTime;
+
+    protected override void OnParametersSet() => Segments = TimelineSegment.Build(Scenario, Baseline);
+
+    private string Clock(TimeSpan offset) => GermanFormat.Clock(Scenario.Info.StartTime, offset);
+
+    private string SegmentText(TimelineSegment segment)
+    {
+        var label = segment.Reason is { } reason ? $"{Labels.For(segment.State)}: {Labels.For(reason)}" : Labels.For(segment.State);
+        return $"{Clock(segment.Start)}–{Clock(segment.End)}: {label} ({GermanFormat.Minutes(segment.Duration)})";
+    }
+}
