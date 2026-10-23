@@ -55,18 +55,32 @@ const url = args.url ?? `http://127.0.0.1:${server.address().port}/SchichtWerk/`
 // ---------- Chrome + DevTools Protocol ----------
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const profile = mkdtempSync(join(tmpdir(), "schichtwerk-chrome-"));
-const port = 9300 + Math.floor(Math.random() * 500);
+// Port 0: Chrome picks a free port and prints "DevTools listening on ws://127.0.0.1:<port>/..." to stderr.
 const chromeArgs = ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
-  `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, "about:blank"];
+  "--remote-debugging-port=0", `--user-data-dir=${profile}`, "about:blank"];
 if (process.env.CI) chromeArgs.unshift("--no-sandbox"); // GitHub runners restrict Chrome's sandbox
-const chrome = spawn(chromePath, chromeArgs, { stdio: "ignore" });
+const chrome = spawn(chromePath, chromeArgs, { stdio: ["ignore", "ignore", "pipe"] });
 
+let chromeOutput = "";
+const devtoolsPort = await new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error(`Chrome did not start within 60 s (${chromePath})\n${chromeOutput}`)), 60000);
+  chrome.stderr.on("data", chunk => {
+    chromeOutput += chunk;
+    const match = chromeOutput.match(/DevTools listening on ws:\/\/[^:]+:(\d+)\//);
+    if (match) { clearTimeout(timer); resolve(match[1]); }
+  });
+  chrome.on("error", error => { clearTimeout(timer); reject(new Error(`Chrome could not be started (${chromePath}): ${error.message}`)); });
+  chrome.on("exit", code => { clearTimeout(timer); reject(new Error(`Chrome exited with code ${code}\n${chromeOutput}`)); });
+});
+
+// The page target can appear slightly after the DevTools endpoint; wait between every attempt.
 let pageTarget;
 for (let i = 0; i < 100 && !pageTarget; i++) {
-  try { pageTarget = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === "page"); }
-  catch { await sleep(200); }
+  try { pageTarget = (await (await fetch(`http://127.0.0.1:${devtoolsPort}/json/list`)).json()).find(t => t.type === "page"); }
+  catch { /* endpoint not ready yet */ }
+  if (!pageTarget) await sleep(200);
 }
-if (!pageTarget) throw new Error(`Chrome did not start (${chromePath})`);
+if (!pageTarget) throw new Error(`Chrome started, but no page target appeared\n${chromeOutput}`);
 
 const socket = new WebSocket(pageTarget.webSocketDebuggerUrl);
 await new Promise(resolve => socket.addEventListener("open", resolve));
