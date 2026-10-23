@@ -69,4 +69,27 @@ public sealed record ProductionInterval
 
     /// <summary>Derived, so good + rejected = total always holds.</summary>
     public int TotalCount => GoodCount + RejectedCount;
+
+    /// <summary>
+    /// Returns this time slot as downtime. The parts it would have produced are lost.
+    /// Only running intervals can stop; a break is not part of planned production time.
+    /// </summary>
+    public ProductionInterval ToDowntime(DowntimeReason reason)
+    {
+        if (State != IntervalState.Running)
+            throw new InvalidOperationException($"Only a running interval can become downtime (interval {Index} is {State}).");
+
+        return new ProductionInterval(Index, Start, Duration, IntervalState.Downtime, reason);
+    }
+
+    /// <summary>Returns this interval with <paramref name="count"/> good parts counted as rejected. The total stays the same.</summary>
+    public ProductionInterval WithAdditionalRejects(int count)
+    {
+        if (count <= 0)
+            throw new ArgumentOutOfRangeException(nameof(count), "Count must be positive.");
+        if (count > GoodCount)
+            throw new InvalidOperationException($"Interval {Index} has only {GoodCount} good parts.");
+
+        return new ProductionInterval(Index, Start, Duration, State, Reason, GoodCount - count, RejectedCount + count);
+    }
 }

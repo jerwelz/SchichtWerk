@@ -68,4 +68,25 @@ public sealed class ShiftScenario
     public TimeSpan IdealCycleTime { get; }
 
     public IReadOnlyList<ProductionInterval> Intervals { get; }
+
+    /// <summary>
+    /// Returns a new scenario in which the given intervals are replaced by <paramref name="change"/>.
+    /// The result passes through the same validation as any other scenario; this one is unchanged.
+    /// </summary>
+    public ShiftScenario WithChangedIntervals(IEnumerable<int> indices, Func<ProductionInterval, ProductionInterval> change)
+    {
+        ArgumentNullException.ThrowIfNull(indices);
+        ArgumentNullException.ThrowIfNull(change);
+
+        var changed = Intervals.ToArray();
+        foreach (var index in indices)
+        {
+            if (index < 0 || index >= changed.Length)
+                throw new ArgumentOutOfRangeException(nameof(indices), $"There is no interval {index}.");
+
+            changed[index] = change(changed[index]);
+        }
+
+        return new ShiftScenario(Info, ShiftLength, IdealCycleTime, changed);
+    }
 }
