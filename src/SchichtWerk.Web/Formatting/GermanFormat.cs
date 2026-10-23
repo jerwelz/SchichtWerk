@@ -12,7 +12,10 @@ public static class GermanFormat
     /// <summary>Shown when a ratio is undefined (division by zero).</summary>
     public const string Undefined = "–";
 
-    private const string Minus = "−";
+    private const string Minus = "\u2212";
+
+    /// <summary>Non-breaking space between number and unit, so "405 Min." never splits across lines.</summary>
+    private const string Nbsp = "\u00A0";
 
     private static readonly NumberFormatInfo Numbers = new()
     {
@@ -26,12 +29,12 @@ public static class GermanFormat
 
     /// <summary>Formats a ratio (0.7778) as a percentage ("77,8 %").</summary>
     public static string Percent(double? ratio, int decimals = 1) =>
-        ratio is { } r ? Number(r * 100, decimals) + " %" : Undefined;
+        ratio is { } r ? Number(r * 100, decimals) + Nbsp + "%" : Undefined;
 
     public static string Minutes(TimeSpan duration) =>
-        Number(duration.TotalMinutes) + " Min.";
+        Number(duration.TotalMinutes) + Nbsp + "Min.";
 
-    public static string Pieces(int count) => Number(count) + " Stück";
+    public static string Pieces(int count) => Number(count) + Nbsp + "Stück";
 
     /// <summary>"+10", "−18" or "±0".</summary>
     public static string Signed(double value, int decimals = 0)
@@ -44,9 +47,9 @@ public static class GermanFormat
 
     /// <summary>A ratio change as percentage points, e.g. "−2,0 Prozentpunkte" (or "−2,0 Pp." when <paramref name="abbreviated"/>).</summary>
     public static string PercentagePoints(double? change, bool abbreviated = false, int decimals = 1) =>
-        change is { } c ? Signed(c * 100, decimals) + (abbreviated ? " Pp." : " Prozentpunkte") : Undefined;
+        change is { } c ? Signed(c * 100, decimals) + (abbreviated ? Nbsp + "Pp." : Nbsp + "Prozentpunkte") : Undefined;
 
-    public static string SignedMinutes(TimeSpan change) => Signed(change.TotalMinutes) + " Min.";
+    public static string SignedMinutes(TimeSpan change) => Signed(change.TotalMinutes) + Nbsp + "Min.";
 
     /// <summary>Clock time of an offset from the start of the shift, e.g. "11:30".</summary>
     public static string Clock(TimeOnly shiftStart, TimeSpan offset) =>

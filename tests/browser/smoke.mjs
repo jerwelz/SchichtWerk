@@ -277,8 +277,15 @@ try {
   for (const [width, height, mobile] of [[1024, 768, false], [768, 1024, true], [390, 844, true], [360, 780, true]]) {
     await setViewport(width, height, { mobile, touch: mobile });
     await load();
-    check(`${width}px: no horizontal scrolling`,
-      await evaluate(`document.documentElement.scrollWidth <= document.documentElement.clientWidth`), true);
+    // Lists the innermost elements that stick out to the right, so a failure names its cause.
+    check(`${width}px: no horizontal scrolling`, await evaluate(`(() => {
+      const limit = document.documentElement.clientWidth;
+      if (document.documentElement.scrollWidth <= limit) return [];
+      return [...document.querySelectorAll("body *")]
+        .filter(e => e.getBoundingClientRect().right > limit + 0.5)
+        .filter(e => ![...e.children].some(c => c.getBoundingClientRect().right > limit + 0.5))
+        .map(e => (e.className || e.tagName) + " → " + Math.round(e.getBoundingClientRect().right) + "px")
+        .slice(0, 8); })()`), []);
     const order = await evaluate(`[...document.querySelectorAll(".dashboard [class*='area-']")]
       .map(e => [e.className.match(/area-\\w+/)[0], e.getBoundingClientRect()])
       .sort((a, b) => a[1].top - b[1].top || a[1].left - b[1].left).map(e => e[0])`);

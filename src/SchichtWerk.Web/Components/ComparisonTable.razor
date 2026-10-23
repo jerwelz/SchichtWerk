@@ -1,5 +1,6 @@
 @* Baseline versus current scenario, every value from the domain results. *@
 
+<div class="table-fit">
 <table class="table comparison">
     <caption class="visually-hidden">Ausgangslage und aktuelles Szenario im Vergleich</caption>
     <thead>
@@ -17,6 +18,7 @@
         @Row("Stillstand", Change.DowntimeChange != TimeSpan.Zero, GermanFormat.Minutes(Baseline.DowntimeTime), GermanFormat.Minutes(Current.DowntimeTime), GermanFormat.SignedMinutes(Change.DowntimeChange))
     </tbody>
 </table>
+</div>
 <p class="muted small table-note">Pp. = Prozentpunkte, die Differenz zweier Prozentwerte.</p>
 
 @code {

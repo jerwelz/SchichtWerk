@@ -185,8 +185,9 @@ h1 { font-size: 1.75rem; }
 .area-explain { order: 6; }
 .area-table { order: 7; }
 
-/* Wide screens: KPIs on top, then two independent columns, then the table. */
-@media (min-width: 62rem) {
+/* Wide screens: KPIs on top, then two independent columns, then the table.
+   Starts at 72rem so the side column is wide enough for the comparison table. */
+@media (min-width: 72rem) {
     .dashboard {
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
         align-items: start;
@@ -567,7 +568,6 @@ h1 { font-size: 1.75rem; }
     font-variant-numeric: tabular-nums;
 }
 
-.table td { white-space: nowrap; }
 
 .table th, .table td {
     padding: 0.35rem 0.3rem;
@@ -583,6 +583,9 @@ h1 { font-size: 1.75rem; }
 .intervals td:nth-child(2) { text-align: left; }
 
 .table-note { margin-top: 0.5rem; }
+
+/* Safety net: an unusually wide font scrolls the table, never the page. */
+.table-fit { overflow-x: auto; }
 
 .table-scroll { max-height: 26rem; overflow: auto; }
 .table-scroll thead th { position: sticky; top: 0; background: var(--surface); }
