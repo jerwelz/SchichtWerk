@@ -42,9 +42,9 @@ public static class GermanFormat
         return (rounded > 0 ? "+" : "") + Number(rounded, decimals);
     }
 
-    /// <summary>A ratio change as percentage points, e.g. "−2,0 Pp.".</summary>
-    public static string PercentagePoints(double? change, int decimals = 1) =>
-        change is { } c ? Signed(c * 100, decimals) + " Pp." : Undefined;
+    /// <summary>A ratio change as percentage points, e.g. "−2,0 Prozentpunkte" (or "−2,0 Pp." when <paramref name="abbreviated"/>).</summary>
+    public static string PercentagePoints(double? change, bool abbreviated = false, int decimals = 1) =>
+        change is { } c ? Signed(c * 100, decimals) + (abbreviated ? " Pp." : " Prozentpunkte") : Undefined;
 
     public static string SignedMinutes(TimeSpan change) => Signed(change.TotalMinutes) + " Min.";
 

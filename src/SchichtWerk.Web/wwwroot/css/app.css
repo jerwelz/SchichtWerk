@@ -42,7 +42,7 @@
         --border: rgba(255, 255, 255, 0.10);
         --accent: #3987e5;
         --accent-strong: #256abf;
-        --accent-soft: #1c5cab;
+        --accent-soft: #9ec5f4;   /* validated: ΔE 20.7 to --accent, ≥ 3:1 on surface */
         --loss: #d95926;
         --break: #4a4a46;
         --capacity: #898781;
@@ -128,9 +128,11 @@ h1 { font-size: 1.75rem; }
 .subtitle { color: var(--text-2); font-size: 1.05rem; }
 
 .github-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
     font-size: 0.9rem;
     font-weight: 600;
-    padding: 0.5rem 0;
 }
 
 .intro {
@@ -220,9 +222,16 @@ h1 { font-size: 1.75rem; }
 /* Small screens: OEE and the last card span the full width, so no half-empty row remains. */
 .kpi-hero, .kpi:last-child { grid-column: 1 / -1; }
 
-@media (min-width: 48rem) {
+/* Tablets: OEE on its own row, the other three side by side. */
+@media (min-width: 40rem) {
+    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kpi:last-child { grid-column: auto; }
+}
+
+/* Wide screens: all four in one row. */
+@media (min-width: 62rem) {
     .kpis { grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); }
-    .kpi-hero, .kpi:last-child { grid-column: auto; }
+    .kpi-hero { grid-column: auto; }
 }
 
 .kpi-label {
@@ -243,6 +252,13 @@ h1 { font-size: 1.75rem; }
 .kpi-hero .kpi-value { font-size: 2.75rem; }
 .kpi-unit { font-size: 1rem; font-weight: 500; color: var(--text-2); }
 .kpi-sub { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+.kpi-note {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border);
+}
 
 .kpi-factors {
     display: flex;
@@ -302,6 +318,7 @@ h1 { font-size: 1.75rem; }
 }
 
 .summary {
+    border-radius: 4px;
     border-top: 1px solid var(--border);
     padding-top: 0.75rem;
     font-size: 0.9rem;
@@ -354,7 +371,7 @@ h1 { font-size: 1.75rem; }
 /* ---------- Cumulative chart ---------- */
 .plot {
     position: relative;
-    padding: 0.5rem var(--plot-pad-right) 1.75rem var(--plot-pad-left);
+    padding: 1.5rem var(--plot-pad-right) 1.75rem var(--plot-pad-left);
     border-radius: 6px;
 }
 
@@ -384,7 +401,7 @@ h1 { font-size: 1.75rem; }
 }
 
 .line-current { stroke: var(--accent); }
-.line-baseline { stroke: var(--accent-soft); }
+.line-baseline { stroke: var(--accent-soft); stroke-width: 1.5; }
 .line-capacity { stroke: var(--capacity); stroke-width: 1.5; }
 
 .crosshair { stroke: var(--text-2); stroke-width: 1; }
@@ -401,6 +418,13 @@ h1 { font-size: 1.75rem; }
 }
 
 .axis-y { right: calc(100% + 0.5rem); transform: translateY(-50%); }
+.axis-unit {
+    position: absolute;
+    right: calc(100% + 0.5rem);
+    bottom: calc(100% + 0.5rem);
+    font-size: 0.75rem;
+    color: var(--muted);
+}
 .axis-x { top: calc(100% + 0.35rem); transform: translateX(-50%); }
 
 .dot {
@@ -461,7 +485,7 @@ h1 { font-size: 1.75rem; }
     border-radius: 4px;
 }
 
-.track-rejects { height: 1.25rem; background: transparent; border-bottom: 1px solid var(--axis); border-radius: 0; }
+.track-rejects { height: 1.5rem; background: transparent; border-bottom: 1px solid var(--axis); border-radius: 0; }
 
 .segment {
     position: absolute;
@@ -484,7 +508,8 @@ h1 { font-size: 1.75rem; }
 .reject-mark {
     position: absolute;
     bottom: 0;
-    min-height: 3px;
+    min-width: 3px;
+    min-height: 5px;
     background: var(--loss);
     border-left: 1px solid var(--surface);
     border-right: 1px solid var(--surface);
@@ -542,8 +567,10 @@ h1 { font-size: 1.75rem; }
     font-variant-numeric: tabular-nums;
 }
 
+.table td { white-space: nowrap; }
+
 .table th, .table td {
-    padding: 0.35rem 0.4rem;
+    padding: 0.35rem 0.3rem;
     border-bottom: 1px solid var(--grid);
     text-align: right;
 }
@@ -555,18 +582,23 @@ h1 { font-size: 1.75rem; }
 
 .intervals td:nth-child(2) { text-align: left; }
 
+.table-note { margin-top: 0.5rem; }
+
 .table-scroll { max-height: 26rem; overflow: auto; }
 .table-scroll thead th { position: sticky; top: 0; background: var(--surface); }
 
 /* ---------- Details (explanation, table) ---------- */
+.card.details { padding-block: 0.25rem; }
+
 .details summary {
     cursor: pointer;
     list-style-position: outside;
     margin-left: 1rem;
+    padding: 0.75rem 0;   /* ≥ 44 px touch target */
 }
 
 .details summary h2 { display: inline; }
-.details[open] summary { margin-bottom: 0.75rem; }
+.details[open] { padding-bottom: 1rem; }
 .details > p { color: var(--text-2); }
 
 .formulas { margin: 0.75rem 0; display: grid; gap: 0.6rem; }
@@ -575,6 +607,13 @@ h1 { font-size: 1.75rem; }
 .formulas strong { color: var(--text); }
 
 .notes { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; color: var(--text-2); display: grid; gap: 0.3rem; }
+
+/* ---------- Forced colours (Windows high contrast): keep the data colours ---------- */
+@media (forced-colors: active) {
+    .plot-svg, .track, .segment, .reject-mark, .reason-bar, .swatch, .key, .dot {
+        forced-color-adjust: none;
+    }
+}
 
 /* ---------- Loading screen (shown until the WebAssembly runtime has started) ---------- */
 .loading-progress {

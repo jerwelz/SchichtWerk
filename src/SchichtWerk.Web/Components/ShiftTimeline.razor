@@ -15,13 +15,13 @@
     </div>
 
     <div class="timeline-row">
-        <span class="timeline-label">Ausschuss</span>
+        <span class="timeline-label">Ausschuss (Stück je 5 Min.)</span>
         <div class="track track-rejects">
             @foreach (var interval in Scenario.Intervals.Where(i => i.RejectedCount > 0))
             {
                 var changed = interval.RejectedCount != Baseline.Intervals[interval.Index].RejectedCount;
                 <span class="reject-mark @(changed ? "is-changed" : "")"
-                      style="left: @ChartMath.Percent(interval.Start.TotalMinutes, Width); width: @ChartMath.Percent(interval.Duration.TotalMinutes, Width); height: @ChartMath.Percent(interval.RejectedCount, MaxPiecesPerInterval)"
+                      style="left: @ChartMath.Percent(interval.Start.TotalMinutes, Width); width: @ChartMath.Percent(interval.Duration.TotalMinutes, Width); height: @ChartMath.Percent(interval.RejectedCount, RejectScale)"
                       title="@($"{Clock(interval.Start)}–{Clock(interval.End)}: {interval.RejectedCount} Ausschuss")"></span>
             }
         </div>
@@ -54,8 +54,11 @@
 
     private double Width => Scenario.ShiftLength.TotalMinutes;
 
-    /// <summary>Maximum pieces per interval at ideal speed; scales the reject marks.</summary>
-    private double MaxPiecesPerInterval => Scenario.Intervals[0].Duration / Scenario.IdealCycleTime;
+    /// <summary>
+    /// Height of a full reject mark, in pieces: at least 5 (the most rejects an interval reaches
+    /// in a scenario), so marks keep their height when switching scenarios and 1 reject stays visible.
+    /// </summary>
+    private double RejectScale => Math.Max(5, Scenario.Intervals.Max(i => i.RejectedCount));
 
     protected override void OnParametersSet() => Segments = TimelineSegment.Build(Scenario, Baseline);
 

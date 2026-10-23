@@ -29,7 +29,8 @@
 
     <div class="dashboard">
         <div class="area-kpis">
-            <KpiCards Result="simulation.CurrentResult" Change="simulation.ChangeFromBaseline" ShowChange="simulation.HasChanges" />
+            <KpiCards Result="simulation.CurrentResult" Baseline="simulation.BaselineResult"
+                      Change="simulation.ChangeFromBaseline" ShowChange="simulation.HasChanges" />
         </div>
 
         @* Two independent columns on wide screens (controls on the right). The controls come

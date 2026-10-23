@@ -14,8 +14,10 @@
 
     <div class="plot" tabindex="0" role="group"
          aria-label="Diagramm: kumulierte Gutteile über die Schicht. Mit den Pfeiltasten links und rechts durch die 5-Minuten-Intervalle wechseln."
-         @onkeydown="OnKeyDown" @onfocus="OnFocus" @onblur="ClearSelection" @onpointerleave="ClearSelection">
+         @onkeydown="OnKeyDown" @onfocus="OnFocus" @onblur="ClearSelection"
+         @onpointerdown="() => pointerPressed = true" @onpointerup="() => pointerPressed = false" @onpointerleave="OnPointerLeave">
         <div class="plot-area">
+            <span class="axis-unit">Stück</span>
             <svg class="plot-svg" viewBox="0 0 @ChartMath.Css(Width) @YMax" preserveAspectRatio="none" aria-hidden="true" focusable="false">
                 @foreach (var tick in YTicks)
                 {
@@ -65,7 +67,7 @@
         </div>
     </div>
 
-    <p class="chart-hint muted">Zeigen oder tippen Sie auf das Diagramm, oder nutzen Sie nach dem Anwählen die Pfeiltasten.</p>
+    <p class="chart-hint muted">Werte je Zeitpunkt: mit der Maus zeigen, antippen oder per Tastatur anwählen und die Pfeiltasten nutzen.</p>
     <p class="visually-hidden" aria-live="polite">@(Selected is { } r ? ReadoutText(r) : "")</p>
 </div>
 
@@ -98,9 +100,26 @@
 
     private void Select(int index) => Selected = index;
 
+    private bool pointerPressed;
+
     private void ClearSelection() => Selected = null;
 
-    private void OnFocus() => Selected ??= Scenario.Intervals.Count - 1;
+    /// <summary>
+    /// A finger "leaves" the chart as soon as it is lifted, so a touch selection stays
+    /// until the visitor taps elsewhere (which blurs the chart).
+    /// </summary>
+    private void OnPointerLeave(PointerEventArgs e)
+    {
+        if (e.PointerType != "touch")
+            ClearSelection();
+    }
+
+    /// <summary>Keyboard focus starts at the end of the shift; a click or tap keeps the interval it selected.</summary>
+    private void OnFocus()
+    {
+        if (!pointerPressed)
+            Selected ??= Scenario.Intervals.Count - 1;
+    }
 
     private void OnKeyDown(KeyboardEventArgs e)
     {

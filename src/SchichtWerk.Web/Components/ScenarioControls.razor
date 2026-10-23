@@ -1,11 +1,14 @@
-@* The two scenario actions and reset. Each action can be applied once until reset. *@
+@* The two scenario actions and reset. Each action can be applied once until reset.
+   A pressed button becomes disabled, which would drop keyboard focus to the page start;
+   focus therefore moves to the result summary (after an action) or the first action (after reset). *@
 
 <section class="card controls" aria-labelledby="controls-title">
     <h2 id="controls-title">Szenario ausprobieren</h2>
     <p class="muted">Verändern Sie die Schicht und beobachten Sie Kennzahlen, Diagramm und Zeitachse.</p>
 
     <div class="action">
-        <button type="button" class="btn btn-action" disabled="@Simulation.MaterialShortageApplied" @onclick="OnMaterialShortage">
+        <button type="button" class="btn btn-action" @ref="firstAction"
+                disabled="@Simulation.MaterialShortageApplied" @onclick="ApplyMaterialShortage">
             @(Simulation.MaterialShortageApplied ? "✓ " : "")10 Min. Materialmangel
         </button>
         <p class="action-text">
@@ -14,7 +17,8 @@
     </div>
 
     <div class="action">
-        <button type="button" class="btn btn-action" disabled="@Simulation.AdditionalRejectsApplied" @onclick="OnAdditionalRejects">
+        <button type="button" class="btn btn-action"
+                disabled="@Simulation.AdditionalRejectsApplied" @onclick="ApplyAdditionalRejects">
             @(Simulation.AdditionalRejectsApplied ? "✓ " : "")10 Gutteile als Ausschuss
         </button>
         <p class="action-text">
@@ -22,9 +26,9 @@
         </p>
     </div>
 
-    <button type="button" class="btn btn-reset" disabled="@(!Simulation.HasChanges)" @onclick="OnReset">Zurücksetzen</button>
+    <button type="button" class="btn btn-reset" disabled="@(!Simulation.HasChanges)" @onclick="Reset">Zurücksetzen</button>
 
-    <div class="summary" role="status" aria-live="polite">
+    <div class="summary" role="status" aria-live="polite" tabindex="-1" @ref="summary">
         @if (Simulation.HasChanges)
         {
             var change = Simulation.ChangeFromBaseline;
@@ -55,8 +59,39 @@
     [Parameter] public EventCallback OnAdditionalRejects { get; set; }
     [Parameter] public EventCallback OnReset { get; set; }
 
+    private ElementReference firstAction;
+    private ElementReference summary;
+    private ElementReference? focusAfterRender;
+
     private string MaterialWindow => Window(DemoScenarioFactory.MaterialShortageActionIntervals);
     private string RejectWindow => Window(DemoScenarioFactory.RejectActionIntervals);
+
+    private async Task ApplyMaterialShortage()
+    {
+        await OnMaterialShortage.InvokeAsync();
+        focusAfterRender = summary;
+    }
+
+    private async Task ApplyAdditionalRejects()
+    {
+        await OnAdditionalRejects.InvokeAsync();
+        focusAfterRender = summary;
+    }
+
+    private async Task Reset()
+    {
+        await OnReset.InvokeAsync();
+        focusAfterRender = firstAction;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusAfterRender is { } target)
+        {
+            focusAfterRender = null;
+            await target.FocusAsync();
+        }
+    }
 
     /// <summary>Clock range of the target intervals, e.g. "11:30–11:40".</summary>
     private string Window(IReadOnlyList<int> indices)

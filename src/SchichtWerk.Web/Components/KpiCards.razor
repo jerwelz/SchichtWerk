@@ -31,11 +31,21 @@
         <p class="kpi-value">@GermanFormat.Percent(Result.RejectShare)</p>
         <ChangeLine Show="ShowChange" Value="Change.RejectShareChange * 100" Text="@GermanFormat.PercentagePoints(Change.RejectShareChange)" HigherIsBetter="false" />
         <p class="kpi-sub">@GermanFormat.Number(Result.RejectedCount) von @GermanFormat.Pieces(Result.TotalCount)</p>
+        @if (ShowChange && Change.RejectedCountChange == 0 && Change.TotalCountChange < 0)
+        {
+            @* The share rises although no extra rejects occur: the same rejects divided by a smaller total. *@
+            <p class="kpi-note">
+                Gleich viele Ausschussteile, aber weniger produziert
+                (@GermanFormat.Number(Result.RejectedCount) ÷ @GermanFormat.Number(Result.TotalCount) statt
+                @GermanFormat.Number(Baseline.RejectedCount) ÷ @GermanFormat.Number(Baseline.TotalCount)).
+            </p>
+        }
     </article>
 </section>
 
 @code {
     [Parameter, EditorRequired] public required OeeResult Result { get; set; }
+    [Parameter, EditorRequired] public required OeeResult Baseline { get; set; }
     [Parameter, EditorRequired] public required ResultComparison Change { get; set; }
     [Parameter] public bool ShowChange { get; set; }
 }
