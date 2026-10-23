@@ -1,0 +1,21 @@
+﻿@page "/"
+@using SchichtWerk.Domain
+@using SchichtWerk.Web.Formatting
+
+<PageTitle>SchichtWerk — Produktionsverluste verstehen</PageTitle>
+
+<main class="placeholder">
+    <h1>SchichtWerk</h1>
+    <p>Wie Stillstand und Ausschuss die Produktion verändern. <strong>Fiktive Schichtsimulation</strong> — im Aufbau.</p>
+
+    <dl>
+        <dt>Geplante Produktionszeit</dt>
+        <dd>@GermanFormat.Minutes(ShiftTimes.PlannedProductionTime)</dd>
+        <dt>Ideale Taktzeit</dt>
+        <dd>@GermanFormat.Number(ShiftTimes.IdealCycleTime.TotalMinutes, 1) Min. pro Stück</dd>
+        <dt>Theoretische Kapazität</dt>
+        <dd>@GermanFormat.Number(ShiftTimes.TheoreticalCapacity) Stück</dd>
+        <dt>Formattest</dt>
+        <dd>@GermanFormat.Number(27000) s · @GermanFormat.Percent(700 / 900.0)</dd>
+    </dl>
+</main>

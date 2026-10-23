@@ -1,0 +1,110 @@
+:root {
+    --bg: #f6f7f9;
+    --text: #1d2430;
+    --muted: #5b6575;
+    --accent: #1f5fbf;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+}
+
+/* FocusOnNavigate moves focus to the h1 for screen readers; no visible ring is needed there. */
+h1:focus {
+    outline: none;
+}
+
+.placeholder {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.placeholder dt {
+    color: var(--muted);
+    margin-top: 0.75rem;
+}
+
+.placeholder dd {
+    margin: 0;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Loading screen (shown until the WebAssembly runtime has started) */
+.loading-progress {
+    position: absolute;
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    inset: 20vh 0 auto 0;
+    margin: 0 auto;
+}
+
+    .loading-progress circle {
+        fill: none;
+        stroke: #e0e3e8;
+        stroke-width: 0.6rem;
+        transform-origin: 50% 50%;
+        transform: rotate(-90deg);
+    }
+
+        .loading-progress circle:last-child {
+            stroke: var(--accent);
+            stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+            transition: stroke-dasharray 0.05s ease-in-out;
+        }
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+
+    .loading-progress-text:after {
+        content: var(--blazor-load-percentage-text, "Wird geladen");
+    }
+
+.loading-note {
+    position: absolute;
+    inset: calc(20vh + 10rem) 1rem auto 1rem;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* Blazor error UI */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem;
+    color: white;
+}
+
+    .blazor-error-boundary::after {
+        content: "Ein Fehler ist aufgetreten.";
+    }

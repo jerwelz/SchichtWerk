@@ -1,0 +1,55 @@
+name: Test and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run tests
+        run: dotnet test SchichtWerk.slnx --configuration Release
+
+      - name: Publish web app
+        run: dotnet publish src/SchichtWerk.Web/SchichtWerk.Web.csproj --configuration Release --output publish
+
+      # The site is served from https://<user>.github.io/SchichtWerk/, not from the domain root.
+      - name: Set base path for GitHub Pages
+        run: sed -i 's|<base href="/" />|<base href="/SchichtWerk/" />|' publish/wwwroot/index.html
+
+      # Without .nojekyll, GitHub Pages ignores folders that start with "_" (such as _framework).
+      - name: Disable Jekyll
+        run: touch publish/wwwroot/.nojekyll
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: publish/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

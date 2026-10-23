@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SchichtWerk.Domain/SchichtWerk.Domain.csproj" />
+    <Project Path="src/SchichtWerk.Web/SchichtWerk.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SchichtWerk.Tests/SchichtWerk.Tests.csproj" />
+  </Folder>
+</Solution>

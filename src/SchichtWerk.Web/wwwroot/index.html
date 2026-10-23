@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SchichtWerk — Produktionsverluste verstehen</title>
+    <meta name="description" content="Fiktive Produktionsschicht: Wie Stillstand und Ausschuss Ausbringung und OEE verändern. C# / Blazor WebAssembly." />
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="icon" type="image/png" href="icon-192.png" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress" aria-hidden="true">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+        <p class="loading-note">SchichtWerk wird geladen. Die Simulation läuft vollständig in Ihrem Browser.</p>
+        <noscript>Für diese Simulation wird JavaScript benötigt.</noscript>
+    </div>
+
+    <div id="blazor-error-ui">
+        Ein unerwarteter Fehler ist aufgetreten.
+        <a href="." class="reload">Neu laden</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>
