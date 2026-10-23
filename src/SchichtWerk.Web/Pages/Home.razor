@@ -4,18 +4,23 @@
 
 <PageTitle>SchichtWerk — Produktionsverluste verstehen</PageTitle>
 
+@* Temporary page: shows the calculated baseline until the dashboard is built in Milestone 4. *@
 <main class="placeholder">
     <h1>SchichtWerk</h1>
     <p>Wie Stillstand und Ausschuss die Produktion verändern. <strong>Fiktive Schichtsimulation</strong> — im Aufbau.</p>
 
     <dl>
-        <dt>Geplante Produktionszeit</dt>
-        <dd>@GermanFormat.Minutes(ShiftTimes.PlannedProductionTime)</dd>
-        <dt>Ideale Taktzeit</dt>
-        <dd>@GermanFormat.Number(ShiftTimes.IdealCycleTime.TotalMinutes, 1) Min. pro Stück</dd>
-        <dt>Theoretische Kapazität</dt>
-        <dd>@GermanFormat.Number(ShiftTimes.TheoreticalCapacity) Stück</dd>
-        <dt>Formattest</dt>
-        <dd>@GermanFormat.Number(27000) s · @GermanFormat.Percent(700 / 900.0)</dd>
+        <dt>OEE (Gesamtanlageneffektivität)</dt>
+        <dd>@GermanFormat.Percent(result.Oee ?? 0)</dd>
+        <dt>Gutteile</dt>
+        <dd>@GermanFormat.Number(result.GoodCount) Stück</dd>
+        <dt>Stillstand</dt>
+        <dd>@GermanFormat.Minutes(result.DowntimeTime)</dd>
+        <dt>Ausschussquote</dt>
+        <dd>@GermanFormat.Percent(result.RejectShare ?? 0)</dd>
     </dl>
 </main>
+
+@code {
+    private readonly OeeResult result = OeeCalculator.Calculate(DemoScenarioFactory.CreateBaseline());
+}
